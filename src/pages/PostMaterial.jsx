@@ -163,6 +163,27 @@ const PostMaterial = () => {
     )
   }
 
+// Geocode manually entered pincode/city to get lat/lng
+  const geocodeLocation = async () => {
+    if (!formData.pincode) return
+    try {
+      const query = `${formData.pincode}, ${formData.city}, India`
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+      )
+      const results = await res.json()
+      if (results.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          lat: parseFloat(results[0].lat),
+          lng: parseFloat(results[0].lon),
+        }))
+      }
+    } catch (err) {
+      console.error('Geocoding failed:', err)
+    }
+  }
+
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return
     if (currentStep === 2 && !validateStep2()) return
@@ -480,6 +501,7 @@ const PostMaterial = () => {
                   type="text"
                   value={formData.pincode}
                   onChange={(e) => handleInputChange('pincode', e.target.value)}
+                  onBlur={geocodeLocation} 
                   placeholder="560066"
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${errors.pincode ? 'border-red-500' : 'border-gray-300'}`}
                 />
